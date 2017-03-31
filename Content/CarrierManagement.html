@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		<meta charset="utf-8">
+		<meta name="hotcss" content="initial-dpr=1">
+		<meta name="viewport" content="width=device-width, initial-scale=1,maximum-scale=1,user-scalable=no">
+		<meta name="apple-mobile-web-app-capable" content="yes">
+		<meta name="apple-mobile-web-app-status-bar-style" content="black">
+		<title></title>
+		<link rel="stylesheet" href="css/CarrierManagement.css" />
+		<link rel="stylesheet" href="css/iconfont.css" />
+		<link rel="stylesheet" type="text/css" href="css/common/dropload.css" />
+		<script type="text/javascript" src="js/common/hotcss.js"></script>
+		<script type="text/javascript" src="js/common/jquery-2.1.4.min.js"></script>
+		<script type="text/javascript" src="js/common/dropload.js"></script>
+		<style>
+			#wrapper::-webkit-scrollbar {
+				width: 0px;
+			}
+		</style>
+	</head>
+
+	<body class="bgColor">
+		<div class="locationPositon">
+			<span class="iconfont icon-2 posIcon"></span>
+			<div class="positionSelect">当前位置</div>
+			<span class="iconfont icon-xiayibu rightIcon"></span>
+		</div>
+		<div class="extraText">
+			<p><textarea onkeyup="javascript:checkWord(this);" onmousedown="javascript:checkWord(this);" name="content" placeholder="填写备注仅限于您记录当前定位信息..." rows="4"></textarea></p>
+			<div class="extraTextScore">(<span id="wordCheck">0</span>/100)</div>
+			<div class="submitButtom" onclick="subForm()">提交</div>
+		</div>
+		<div class="titleIcon"><span class="iconfont icon-liebiao titleIcon-i"></span><span class="titleIcon-title">定位信息列表</span></div>
+		<div class="content">
+			<div class="lists" id="wrapper">
+				<div class="show" id="scroller">
+					<ul class="PositionInfo" id="thelist">
+						<li>
+							<p class="listTitle"><span class="listDate">2016-10-27</span><span class="listHour">09:20:45</span></p>
+							<div>
+								<span class="iconfont icon-weizhi positionIcon"></span>
+								<p class="positionIconInfo">北京是非得失犯得上犯得上犯得上犯得上犯得上发射点发射点犯得上犯得上犯得上反对法发士大夫士大夫大师傅大师傅大师傅士大夫</p>
+								<p class="positionText">备注但是犯得上犯得上犯得上犯得上犯得上发生大师傅大师傅大师傅士大夫但是但是但是但是</p>
+							</div>
+						</li>
+						<li>
+							<p class="listTitle"><span class="listDate">2016-10-27</span><span class="listHour">09:20:45</span></p>
+							<div>
+								<span class="iconfont icon-weizhi positionIcon"></span>
+								<p class="positionIconInfo">北京是非得失犯得上犯得上犯得上犯得上犯得上发射点发射点犯得上犯得上犯得上反对法发士大夫士大夫大师傅大师傅大师傅士大夫</p>
+							</div>
+						</li>
+					</ul>
+				</div>
+			</div>
+		</div>
+	</body>
+
+</html>
+<script>
+	//上拉加载，下拉刷新
+	$(function() {
+		var counter = 0;
+		// 每页展示4个
+		var num = 4;
+		var pageStart = 0,
+			pageEnd = 0;
+		// dropload
+		$('.show').dropload({
+			scrollArea: window,
+			domDown: {
+				domClass: 'dropload-down',
+				domRefresh: '<div class="dropload-refresh">↑上拉加载更多</div>',
+				domLoad: '<div class="dropload-load"><span class="loading"></span>加载中...</div>',
+				domNoData: '<div class="dropload-noData">没有更多数据了</div>'
+			},
+			loadDownFn: function(me) {
+				var result = '';
+				counter++;
+				pageEnd = num * counter;
+				pageStart = pageEnd - num;
+
+				for(var i = pageStart; i < pageEnd; i++) {
+					result += '<li>' +
+						'<p class="listTitle"><span class="listDate">2016-10-27</span><span class="listHour">09:20:45</span></p>' +
+						'<div>' +
+						'<span class="iconfont icon-weizhi positionIcon"></span>' +
+						'<p class="positionIconInfo">北京市石景山区</p>' +
+						'<p class="positionText">电风扇第三方第三方第三方第三方</p>' +
+						'</div>' +
+						'</li>';
+					if((i + 1) >= 20) {
+						// 锁定
+						me.lock();
+						// 无数据
+						me.noData();
+						break;
+					}
+				}
+				// 为了测试，延迟1秒加载
+				setTimeout(function() {
+					$('.PositionInfo').append(result);
+					// 每次数据加载完，必须重置
+					me.resetload();
+				}, 1000);
+			},
+			threshold: 50
+		});
+	});
+	//判断最多输入100个字
+	var maxstrlen = 100;
+
+	function Q(s) {
+		return document.getElementById(s);
+	}
+
+	function checkWord(c) {
+		len = maxstrlen;
+		var str = c.value;
+		myLen = getStrleng(str);
+		var wck = Q("wordCheck");
+		if(myLen > len * 2) {
+			c.value = str.substring(0, i - 1);
+		} else {
+			wck.innerHTML = 100-(Math.floor((len * 2 - myLen) / 2));
+		}
+	}
+
+	function getStrleng(str) {
+		myLen = 0;
+		i = 0;
+		for(;
+			(i < str.length) && (myLen <= maxstrlen * 2); i++) {
+			if(str.charCodeAt(i) > 0 && str.charCodeAt(i) < 128)
+				myLen++;
+			else
+				myLen += 2;
+		}
+		return myLen;
+	};
+	$('.locationPositon').click(function() {
+		location.href = '../addLocation.html';
+	});
+	var keyCode = sessionStorage.getItem("KeyCode");
+	var point=sessionStorage.getItem('point');
+	alert(point);//获得对应的坐标位置；
+	console.log(keyCode);
+	if(keyCode==null){
+		keyCode='当前位置';//添加当前位置
+	}
+	$('.positionSelect').html(keyCode);
+	//提交
+	var idKey = sessionStorage.getItem("idKey");
+	function subForm() {
+		var textForm = $('.extraText textarea').val();
+		var poText = $('.positionSelect').html();
+		var ht = '';
+		if(idKey == "0") {
+			ht = '<li>' +
+			'<p class="listTitle"><span class="listDate">2016-10-27</span><span class="listHour">09:20:45</span></p>' +
+			'<div>' +
+			'<span class="iconfont icon-weizhi positionIconBlue"></span>' +
+			'<p class="positionIconInfo">' + poText + '</p>' +
+			'<p class="positionText">' + textForm + '</p>' +
+			'</div>' +
+			'</li>';
+		}
+		if(idKey == "1") {
+			ht = '<li>' +
+			'<p class="listTitle"><span class="listDate">2016-10-27</span><span class="listHour">09:20:45</span></p>' +
+			'<div>' +
+			'<span class="iconfont icon-weizhi positionIcon"></span>' +
+			'<p class="positionIconInfo">' + poText + '</p>' +
+			'<p class="positionText">' + textForm + '</p>' +
+			'</div>' +
+			'</li>';
+		}
+		$('.PositionInfo').append(ht);//通过传过来的值得判断当前添加时自动选择，还是手动输入;如果是自动选择icon-weizhi添加positionIconBlue，否则添加positionIcon;在没选择新位置之前的数据都是假数据，所以颜色都是灰色；
+	}
+</script>

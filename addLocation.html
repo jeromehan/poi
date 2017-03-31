@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="hotcss" content="initial-dpr=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1,maximum-scale=1,user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <title></title>
+    <link rel="stylesheet" href="Content/css/CarrierManagement.css" />
+    <link rel="stylesheet" href="Content/css/iconfont.css" />
+    <script type="text/javascript" src="Content/js/common/hotcss.js"></script>
+    <script type="text/javascript" src="Content/js/common/jquery-2.1.4.min.js"></script>
+    <script type="text/javascript" src="http://api.map.baidu.com/api?v=2.0&ak=402ChBi6VhZvnLkNboB6QzKpnG9zjqmz"></script>
+    <script type="text/javascript" src="Content/js/common/iscroll.js"></script>
+    <style type="text/css"></style>
+</head>
+
+<body class="bgColor">
+
+    <div class="searchText">
+        <div class="inputFid"><input type="text" placeholder="手动输入位置" onkeyup="javascript:checkWord(this);" onmousedown="javascript:checkWord(this);" name="content" /></div>
+        <span id="wordCheck" style="display: none;"></span>
+        <span onclick="confirmSel()">确定</span>
+        <div class="falseIcon" onclick="del()">×</div>
+    </div>
+    <div class="content">
+        <div class="lists lanren" id="wrapper1">
+            <div class="show hidden" id="scroller1">
+            </div>
+            <ul class="list">数据加载中，请稍后...</ul>
+            <div class="more">
+                <a href="javascript:;" onClick="lanren.loadMore();">更多</a>
+            </div>
+        </div>
+    </div>
+    <div id="allmap" style="display: none;"></div>
+    <ul id="r-result" style="display: none;"><ul/>
+
+</body>
+<script type="text/javascript">
+    //百度Api
+    var point = new BMap.Point(116.404, 39.915); //初始化中心点坐标
+    var map = new BMap.Map("allmap");
+    map.centerAndZoom(point, 20);
+    var geolocation = new BMap.Geolocation();
+    var gc = new BMap.Geocoder();
+    geolocation.getCurrentPosition(function(r) {
+        if (this.getStatus() == BMAP_STATUS_SUCCESS) {
+            var mk = new BMap.Marker(r.point);
+            map.addOverlay(mk);
+            map.panTo(r.point);
+            point = new BMap.Point(r.point.lng, r.point.lat); //把当前位置坐标赋值给中心点
+            var pt = r.point;
+            var message = "";
+            gc.getLocation(pt, function(rs) {
+                var addComp = rs.addressComponents;
+                var ap = addComp.province + addComp.city + addComp.district + addComp.street + addComp.streetNumber;
+                $('.list').append('<li class="listKey" point="'+r.point.lng+"*"+r.point.lat+'">' + '当前位置:' + ap + '</li>'); //获取当前位置，添加伪属性来添加坐标
+            });
+
+        } else {
+            alert('failed' + this.getStatus());
+        }
+        var mOption = {
+            poiRadius: 3000, //半径为1000米内的POI,默认100米
+            numPois: 50 //列举出50个POI,默认10个
+        }
+        var myGeo = new BMap.Geocoder(); //创建地址解析实例
+        function displayPOI() {
+            map.addOverlay(new BMap.Circle(point, 1000)); //添加一个圆形覆盖物
+            myGeo.getLocation(point,
+                function mCallback(rs) {
+                    var allPois = rs.surroundingPois; //获取全部POI
+                    var s = [];
+                    for (i = 0; i < allPois.length; ++i) {
+                        s.push(allPois[i].title + ", " + allPois[i].address);
+                    }
+                    var html = '';
+                    for (var i = 0; i < s.length; i++) {
+                        html += '<li class="listKey" point="'+allPois[i].point.lng+"*"+allPois[i].point.lat+'">' + s[i] + '</li>';//获取周边位置，添加伪属性来添加坐标
+                    };
+                    $('.list').append(html);
+                    lanren.init(); //加载更多设置
+                }, mOption
+            );
+        }
+        displayPOI();
+    });
+    //显示更多的控制
+    var _content = []; //临时存储li循环内容
+    var lanren = {
+        _default: 15, //默认显示个数
+        _loading: 15, //每次点击按钮后加载的个数
+        init: function() {
+            var lis = $(".lanren .list li");
+            $(".lanren ul.list").html("");
+            for (var n = 0; n < lanren._default; n++) {
+                lis.eq(n).appendTo(".lanren ul.list");
+            }
+            for (var i = lanren._default; i < lis.length; i++) {
+                _content.push(lis.eq(i));
+            }
+            $(".lanren .hidden").html("");
+        },
+        loadMore: function() {
+            var mLis = $(".lanren ul.list li").length;
+            for (var i = 0; i < lanren._loading; i++) {
+                var target = _content.shift();
+                if (!target) {
+                    $('.lanren .more').html("<p>全部加载完毕</p>");
+                    break;
+                }
+                $(".lanren ul.list").append(target);
+            }
+        }
+    };
+    //点击手动选择
+    $('body').on('click', '.list li', function() {
+        var _this = $(this).html();
+        var point=$(this).attr('point');
+        $('.searchText input').val(_this);
+        $('.searchText input').addClass('sel');
+        $('.searchText input').attr('point',point);
+        sessionStorage.setItem("point",point);//存储坐标
+        sessionStorage.setItem("KeyCode", _this);
+        sessionStorage.setItem('idKey',0);
+        location.href = 'Content/CarrierManagement.html';
+    });
+    //判断是手动选择还是手动输入
+    function confirmSel() {
+    	var idKey;
+        if ($('.searchText input').hasClass('sel')) {
+            alert('自动选择');
+            idKey=0;
+        } else {
+            alert('手动输入');
+            idKey=1;
+        }
+        var point=$('.searchText input').attr('point');//获得所有自动选择的坐标
+        var traKey = $('.searchText input').val();
+        sessionStorage.setItem("point",point);//存储坐标
+        sessionStorage.setItem("KeyCode", traKey);
+        sessionStorage.setItem('idKey',idKey);
+        location.href = 'Content/CarrierManagement.html';
+    }
+    //删除图标按钮
+    function del() {
+        $('.searchText input').val('');
+        $('.searchText input').removeClass('sel');
+        $('.falseIcon').hide();
+    };
+    //判断键盘输入的时候图标显示
+    $('.searchText input').keyup(function() {
+        if ($(this).val() == '') {
+            $('.falseIcon').hide();
+        } else {
+            $('.falseIcon').show();
+        }
+    });
+    //判断最多输入48个汉字
+    var maxstrlen = 48;
+
+    function Q(s) {
+        return document.getElementById(s);
+    }
+
+    function checkWord(c) {
+        len = maxstrlen;
+        var str = c.value;
+        myLen = getStrleng(str);
+        var wck = Q("wordCheck");
+        if (myLen > len * 2) {
+            c.value = str.substring(0, i - 1);
+        } else {
+            wck.innerHTML = Math.floor((len * 2 - myLen) / 2);
+        }
+    }
+
+    function getStrleng(str) {
+        myLen = 0;
+        i = 0;
+        for (;
+            (i < str.length) && (myLen <= maxstrlen * 2); i++) {
+            if (str.charCodeAt(i) > 0 && str.charCodeAt(i) < 128)
+                myLen++;
+            else
+                myLen += 2;
+        }
+        return myLen;
+    };
+</script>
+
+</html>
